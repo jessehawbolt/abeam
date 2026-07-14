@@ -268,7 +268,7 @@
    All content renders from the data objects below.
    ============================================================ */
 
-const APP_VERSION = '0.1.1';
+const APP_VERSION = '0.1.2';
 
 /* ---------- helpers ---------- */
 const el = id => document.getElementById(id);
@@ -824,22 +824,26 @@ const CIP_ROUTES = {
   },
 };
 
-/* Weather observation codes — per allships.com.au/weather-observation-codes */
+/* Weather observation codes — Beaufort weather notation (WMO 4501
+   cross-reference, per JODC); visibility WMO 4300; sea state WMO 3700 */
 const WX_CODES = {
   weather: {
-    title: "State of weather — logbook letter codes",
+    title: "State of weather — Beaufort letter codes",
     head: ["Code", "Meaning"],
     rows: [
-      ["a", "Active"], ["b", "Blue sky (< 25% clouded)"], ["bc", "Partly cloudy (between b and c)"],
-      ["c", "Cloudy (> 75% clouded)"], ["d", "Drizzling rain"], ["f", "Fog"],
-      ["g", "Dark and gloomy"], ["h", "Hail"], ["l", "Lightning"], ["o", "Overcast"],
-      ["p", "Passing showers"], ["q", "Squally"], ["r", "Rain"], ["s", "Snow"],
-      ["t", "Thunder"], ["u", "Ugly (threatening)"], ["v", "Unusual transparency (visibility)"],
+      ["b", "Blue sky (≤ ¼ clouded), clear or hazy"], ["bc", "Partly cloudy (¼–¾ clouded)"],
+      ["c", "Mainly cloudy (≥ ¾ covered)"], ["d", "Drizzle or fine rain"],
+      ["e", "Wet air, without rain falling"], ["f", "Fog"], ["g", "Gloomy"],
+      ["h", "Hail"], ["l", "Lightning"], ["m", "Mist"],
+      ["o", "Overcast (whole sky unbroken cloud)"], ["p", "Passing showers"],
+      ["q", "Squalls"], ["r", "Rain"], ["s", "Snow"], ["t", "Thunder"],
+      ["u", "Ugly, threatening sky"], ["v", "Unusual visibility"],
+      ["z", "Dust haze / turbid dry atmosphere"],
     ],
     note: "Letters combine to describe conditions — e.g. “bc” partly cloudy, “rq” rain squalls, “tlr” thunderstorm with rain.",
   },
   vis: {
-    title: "Visibility codes 0–9",
+    title: "Visibility codes 0–9 (WMO 4300)",
     head: ["Code", "Description", "Range"],
     rows: [
       ["0", "Dense fog", "< 50 m"], ["1", "Thick fog", "50–200 m"], ["2", "Fog", "200–500 m"],
@@ -851,7 +855,7 @@ const WX_CODES = {
     note: "Rough conversion: 1 nm ≈ 1.85 km, so code 6 spans roughly 2–5 nm and code 7 roughly 5–11 nm.",
   },
   sea: {
-    title: "Sea state (WMO) 0–9",
+    title: "Sea state 0–9 (WMO 3700)",
     head: ["Code", "Description", "Wave height (crest–trough)"],
     rows: [
       ["0", "Calm — glassy", "0 m"], ["1", "Calm — rippled", "0–0.1 m"], ["2", "Smooth — wavelets", "0.1–0.5 m"],
