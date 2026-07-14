@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b1d2a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>Abeam — Canadian Mariner's Pocket Reference</title>
+<style>
+  :root {
+    --bg: #0b1d2a;
+    --bg2: #10293a;
+    --card: #14324a;
+    --card-edge: #1e4562;
+    --ink: #e8f1f8;
+    --ink-dim: #9db8cc;
+    --accent: #ffb703;
+    --accent2: #4cc9f0;
+    --good: #52b788;
+    --bad: #e5636f;
+    --red-light: #ff4d4d;
+    --green-light: #3ddc84;
+    --white-light: #ffffff;
+    --yellow-light: #ffd166;
+    --tap: rgba(76, 201, 240, 0.15);
+  }
+  [data-theme="day"] {
+    --bg: #eef4f8;
+    --bg2: #e2ebf2;
+    --card: #ffffff;
+    --card-edge: #c9d9e4;
+    --ink: #12283a;
+    --ink-dim: #55708a;
+    --accent: #c77800;
+    --accent2: #0077b6;
+    --tap: rgba(0, 119, 182, 0.1);
+  }
+  [data-theme="night"] {
+    --bg: #000000;
+    --bg2: #0d0000;
+    --card: #1a0505;
+    --card-edge: #3d0f0f;
+    --ink: #ff5a5a;
+    --ink-dim: #a83232;
+    --accent: #ff5a5a;
+    --accent2: #ff5a5a;
+    --good: #ff5a5a;
+    --bad: #ff5a5a;
+    --green-light: #7a2626;
+    --white-light: #ff8080;
+    --yellow-light: #cc4444;
+    --tap: rgba(255, 90, 90, 0.12);
+  }
+  [data-theme="night"] img, [data-theme="night"] .flag { filter: grayscale(1) brightness(0.6) sepia(1) hue-rotate(-50deg) saturate(4); }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { font-size: 16px; }
+  body {
+    overflow-x: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+    min-height: 100vh;
+    transition: background 0.25s, color 0.25s;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    position: sticky; top: 0; z-index: 20;
+    background: var(--bg);
+    padding: calc(10px + env(safe-area-inset-top)) 14px 8px;
+    border-bottom: 1px solid var(--card-edge);
+  }
+  .header-row { display: flex; align-items: center; gap: 10px; }
+  .brand { font-size: 1.05rem; font-weight: 700; letter-spacing: 0.3px; flex: 1; }
+  .brand small { display: block; font-size: 0.65rem; font-weight: 500; color: var(--ink-dim); letter-spacing: 0.5px; }
+  .theme-btn {
+    background: var(--card); color: var(--ink); border: 1px solid var(--card-edge);
+    border-radius: 20px; padding: 7px 13px; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+  }
+  .searchbar {
+    margin-top: 8px; display: none;
+  }
+  .searchbar input {
+    width: 100%; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--card-edge);
+    background: var(--bg2); color: var(--ink); font-size: 1rem; outline: none;
+  }
+  .searchbar input::placeholder { color: var(--ink-dim); }
+
+  /* ---------- Layout ---------- */
+  main { padding: 12px 14px 20px; max-width: 640px; margin: 0 auto; }
+  .section { display: none; }
+  .section.active { display: block; }
+  h2 {
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--accent); margin: 18px 0 8px; font-weight: 700;
+  }
+  h2:first-child { margin-top: 4px; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--card-edge); border-radius: 14px;
+    padding: 12px 14px; margin-bottom: 8px;
+    overflow-x: auto;
+  }
+  .card.hidden { display: none; }
+  .card-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 2px; }
+  .card-sub { font-size: 0.83rem; color: var(--ink-dim); line-height: 1.45; }
+  .card-note { font-size: 0.78rem; color: var(--accent2); margin-top: 6px; font-style: italic; }
+  .card-flex { display: flex; align-items: center; gap: 14px; }
+  .card-flex .grow { flex: 1; min-width: 0; }
+
+  /* ---------- Light diagrams ---------- */
+  .lights { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 44px; }
+  .lights-row { display: flex; gap: 5px; }
+  .dot {
+    width: 15px; height: 15px; border-radius: 50%;
+    box-shadow: 0 0 8px 1px currentColor;
+  }
+  .dot.r { background: var(--red-light); color: var(--red-light); }
+  .dot.g { background: var(--green-light); color: var(--green-light); }
+  .dot.w { background: var(--white-light); color: var(--white-light); }
+  .dot.y { background: var(--yellow-light); color: var(--yellow-light); }
+  [data-theme="day"] .dot { box-shadow: 0 0 0 1px rgba(0,0,0,0.25) inset; }
+  [data-theme="day"] .dot.w { box-shadow: 0 0 0 1.5px #99a inset; }
+
+  .shape { font-size: 1.7rem; line-height: 1.1; min-width: 44px; text-align: center; color: var(--ink); }
+
+  /* ---------- Sound signal notation ---------- */
+  .blast { display: inline-flex; gap: 4px; align-items: center; margin-right: 8px; }
+  .short-b, .long-b { height: 10px; border-radius: 5px; background: var(--accent); display: inline-block; }
+  .short-b { width: 10px; }
+  .long-b { width: 34px; }
+
+  /* ---------- Tables ---------- */
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--card-edge); vertical-align: top; }
+  th { color: var(--accent); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.8px; }
+  tr:last-child td { border-bottom: none; }
+  .ch { font-weight: 700; color: var(--accent2); white-space: nowrap; }
+
+  /* ---------- Script blocks (radio) ---------- */
+  .script {
+    background: var(--bg2); border-radius: 10px; padding: 10px 12px; margin-top: 8px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.8rem; line-height: 1.7;
+    white-space: pre-wrap; color: var(--ink);
+    border-left: 3px solid var(--accent);
+  }
+  .script b { color: var(--accent); }
+
+  /* ---------- Buoys ---------- */
+  .buoy-swatch {
+    min-width: 30px; width: 30px; height: 46px; border-radius: 5px 5px 8px 8px;
+    border: 1px solid rgba(0,0,0,0.35); flex-shrink: 0;
+  }
+  .topmark { text-align: center; font-size: 0.85rem; line-height: 1; margin-bottom: 2px; }
+
+  /* ---------- Tools ---------- */
+  .tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .field { margin-bottom: 10px; }
+  .field label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--ink-dim); margin-bottom: 4px; }
+  .field input, .field select {
+    width: 100%; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--card-edge);
+    background: var(--bg2); color: var(--ink); font-size: 1.05rem; outline: none;
+  }
+  .result-box {
+    background: var(--bg2); border-radius: 10px; padding: 10px 12px; margin-top: 4px;
+    font-size: 0.95rem; line-height: 1.8;
+  }
+  .result-box b { color: var(--accent); }
+  .btn {
+    display: block; width: 100%; padding: 13px; border: none; border-radius: 12px;
+    background: var(--accent); color: #10202e; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 6px;
+  }
+  [data-theme="night"] .btn { background: #5c1010; color: var(--ink); }
+
+  /* ---------- Quiz ---------- */
+  .quiz-q { font-size: 1.05rem; font-weight: 600; line-height: 1.5; margin-bottom: 14px; }
+  .quiz-opt {
+    display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 8px;
+    background: var(--bg2); color: var(--ink); border: 1.5px solid var(--card-edge);
+    border-radius: 12px; font-size: 0.95rem; cursor: pointer; line-height: 1.4;
+  }
+  .quiz-opt:active { background: var(--tap); }
+  .quiz-opt.correct { border-color: var(--good); background: rgba(82,183,136,0.15); }
+  .quiz-opt.wrong { border-color: var(--bad); background: rgba(229,99,111,0.15); }
+  .quiz-meta { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--ink-dim); margin-bottom: 10px; }
+  .quiz-cat { color: var(--accent2); font-weight: 600; }
+  .pill-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .pill {
+    padding: 8px 14px; border-radius: 20px; border: 1px solid var(--card-edge);
+    background: var(--card); color: var(--ink); font-size: 0.82rem; font-weight: 600; cursor: pointer;
+  }
+  .pill.on { background: var(--accent); color: #10202e; border-color: var(--accent); }
+  [data-theme="night"] .pill.on { background: #5c1010; color: var(--ink); }
+
+  /* ---------- Bottom nav ---------- */
+  nav {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 30;
+    display: flex; background: var(--bg2); border-top: 1px solid var(--card-edge);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  nav button {
+    flex: 1; background: none; border: none; color: var(--ink-dim);
+    padding: 9px 2px 7px; font-size: 0.62rem; font-weight: 600; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    letter-spacing: 0.3px;
+  }
+  nav button .ico { font-size: 1.25rem; line-height: 1; }
+  nav button.active { color: var(--accent); }
+
+  .footer-note { text-align: center; font-size: 0.7rem; color: var(--ink-dim); margin-top: 24px; line-height: 1.6; padding: 0 10px; }
+</style>
+</head>
+<body data-theme="dusk">
+
+<header>
+  <div class="header-row">
+    <div class="brand">⚓ Abeam<small>CANADIAN MARINER'S POCKET REFERENCE</small></div>
+    <button class="theme-btn" id="themeBtn" onclick="cycleTheme()">🌘 Dusk</button>
+  </div>
+  <div class="searchbar" id="searchbar">
+    <input type="search" id="searchInput" placeholder="Filter this section…" oninput="filterCards(this.value)">
+  </div>
+</header>
+
+<main>
+  <div class="section" id="sec-rules"></div>
+  <div class="section" id="sec-radio"></div>
+  <div class="section" id="sec-cip"></div>
+  <div class="section" id="sec-buoys"></div>
+  <div class="section" id="sec-tools"></div>
+  <div class="section" id="sec-study"></div>
+</main>
+
+<nav>
+  <button data-sec="radio" onclick="go('radio')"><span class="ico">📻</span>Radio</button>
+  <button data-sec="cip" onclick="go('cip')"><span class="ico">📍</span>CIPs</button>
+  <button data-sec="buoys" onclick="go('buoys')"><span class="ico">🛟</span>Buoyage</button>
+  <button data-sec="rules" onclick="go('rules')"><span class="ico">🚢</span>Rules</button>
+  <button data-sec="tools" onclick="go('tools')"><span class="ico">🧮</span>Tools</button>
+  <button data-sec="study" onclick="go('study')"><span class="ico">🎓</span>Study</button>
+</nav>
+
+<script>
+/* ============================================================
+   WHEELHOUSE — data-driven pocket reference for Canadian mariners
+   All content renders from the data objects below.
+   ============================================================ */
+
+/* ---------- helpers ---------- */
+const el = id => document.getElementById(id);
+const dots = pattern => {
+  // pattern: rows top→bottom, e.g. [["r"],["w"],["g","r"]]
+  return '<div class="lights">' + pattern.map(row =>
+    '<div class="lights-row">' + row.map(c => `<span class="dot ${c}"></span>`).join('') + '</div>'
+  ).join('') + '</div>';
+};
+const blasts = seq => {
+  // seq: "S" short, "L" long/prolonged, e.g. "LSS"
+  return '<span class="blast">' + [...seq].map(b =>
+    `<span class="${b === 'S' ? 'short-b' : 'long-b'}"></span>`
+  ).join('') + '</span>';
+};
+const card = (title, sub, visual = '', note = '') => `
+  <div class="card" data-search="${(title + ' ' + sub + ' ' + note).toLowerCase().replace(/"/g, '')}">
+    <div class="card-flex">
+      ${visual}
+      <div class="grow">
+        <div class="card-title">${title}</div>
+        <div class="card-sub">${sub}</div>
+        ${note ? `<div class="card-note">${note}</div>` : ''}
+      </div>
+    </div>
+  </div>`;
+
+/* ============================================================
+   SECTION: RULES (COLREGs quick reference)
+   ============================================================ */
+const NAV_LIGHTS = [
+  ["Power-driven vessel < 50 m", "Masthead light, sidelights, sternlight.", [["w"],["g","r"]], "Rule 23"],
+  ["Power-driven vessel ≥ 50 m", "Two masthead lights (forward lower, after higher), sidelights, sternlight.", [["w"],["w"],["g","r"]], "Rule 23"],
+  ["Sailing vessel underway", "Sidelights and sternlight only — no masthead light. May add all-round red over green at masthead.", [["g","r"]], "Rule 25 · Under sail AND power = show lights of a power vessel + cone shape"],
+  ["Vessel trawling", "Green over white all-round, plus masthead light if ≥ 50 m; sidelights & sternlight when making way.", [["g"],["w"]], "Rule 26 · \"Green over white — trawling tonight\""],
+  ["Fishing (other than trawling)", "Red over white all-round; if gear extends > 150 m, all-round white toward the gear.", [["r"],["w"]], "Rule 26 · \"Red over white — fishing tonight\""],
+  ["Not under command (NUC)", "Two all-round red in a vertical line; sidelights & sternlight when making way.", [["r"],["r"]], "Rule 27 · \"Red over red — the captain is dead\""],
+  ["Restricted in ability to manoeuvre (RAM)", "Red–white–red all-round in a vertical line, plus normal underway or anchor lights.", [["r"],["w"],["r"]], "Rule 27"],
+  ["Constrained by draught", "Three all-round red in a vertical line, in addition to power-vessel lights.", [["r"],["r"],["r"]], "Rule 28"],
+  ["Pilot vessel on duty", "White over red all-round at masthead; underway also sidelights & sternlight.", [["w"],["r"]], "Rule 29 · \"White over red — pilot ahead\""],
+  ["Vessel at anchor", "All-round white where best seen; ≥ 50 m: second all-round white aft, lower; ≥ 100 m also light the decks.", [["w"]], "Rule 30"],
+  ["Vessel aground", "Anchor light(s) plus two all-round red in a vertical line.", [["r"],["r"],["w"]], "Rule 30"],
+  ["Towing — tow ≤ 200 m", "Two masthead lights in a vertical line, sidelights, sternlight, yellow towing light above sternlight.", [["w"],["w"],["y"]], "Rule 24 · Three masthead lights when tow exceeds 200 m"],
+];
+
+const DAY_SHAPES = [
+  ["At anchor", "One black ball forward, where best seen.", "●"],
+  ["Not under command", "Two black balls in a vertical line.", "●<br>●"],
+  ["Restricted in ability to manoeuvre", "Ball – diamond – ball in a vertical line.", "●<br>◆<br>●"],
+  ["Aground", "Three black balls in a vertical line.", "●<br>●<br>●"],
+  ["Constrained by draught", "A black cylinder.", "▮"],
+  ["Sailing vessel under power (motor-sailing)", "A black cone, apex downward, forward.", "▼"],
+  ["Vessel fishing / trawling", "Two black cones, apexes together (hourglass).", "▼<br>▲"],
+  ["Vessel towing, tow > 200 m", "A black diamond on both towing vessel and tow.", "◆"],
+];
+
+const SOUND_MANOEUVRE = [
+  ["I am altering course to STARBOARD", "S"],
+  ["I am altering course to PORT", "SS"],
+  ["My engines are going ASTERN", "SSS"],
+  ["DANGER / I do not understand your intentions", "SSSSS"],
+  ["Narrow channel: I intend to overtake on your STARBOARD side", "LLS"],
+  ["Narrow channel: I intend to overtake on your PORT side", "LLSS"],
+  ["Agreement to be overtaken", "LSLS"],
+  ["Approaching a blind bend", "L"],
+];
+
+const SOUND_FOG = [
+  ["Power vessel making way", "One prolonged blast, every ≤ 2 min", "L"],
+  ["Power vessel underway, stopped", "Two prolonged blasts, every ≤ 2 min", "LL"],
+  ["NUC, RAM, constrained by draught, sailing, fishing, towing", "One prolonged + two short, every ≤ 2 min", "LSS"],
+  ["Last vessel of a manned tow", "One prolonged + three short (after the towing vessel's signal)", "LSSS"],
+  ["At anchor < 100 m", "Rapid bell ~5 s, every ≤ 1 min", ""],
+  ["At anchor ≥ 100 m", "Bell forward, then gong aft, every ≤ 1 min", ""],
+  ["Aground", "Three distinct bell strokes + anchor signal + three strokes", ""],
+  ["Pilot vessel on duty", "May add four short blasts to its fog signal", "SSSS"],
+];
+
+function renderRules() {
+  let html = '<h2>Responsibility hierarchy — Rule 18</h2>';
+  html += card("The pecking order (give-way priority)",
+    "Not Under Command → Restricted in Ability to Manoeuvre → Constrained by Draught → Fishing → Sailing → Power-driven → Seaplane / WIG. Each vessel keeps clear of every vessel above it on the list.",
+    '<div class="shape">⚖️</div>',
+    "Mnemonic: “New Reels Catch Fish So Purchase Some”");
+  html += card("Head-on — Rule 14", "Two power vessels meeting head-on: BOTH alter course to starboard, pass port-to-port.", '<div class="shape">↔️</div>');
+  html += card("Crossing — Rule 15", "Power vessel with the other on her STARBOARD side gives way — and should avoid crossing ahead. If you see her red sidelight at night, she's on your starboard: give way.", '<div class="shape">✖️</div>', "“If to starboard red appear, 'tis your duty to keep clear.”");
+  html += card("Overtaking — Rule 13", "ANY vessel overtaking (approaching from more than 22.5° abaft the beam) keeps clear — even sail overtaking power. At night: you see only her sternlight.", '<div class="shape">⏩</div>');
+  html += card("Stand-on vessel — Rule 17", "Hold course and speed. You MAY act as soon as it's apparent the give-way vessel isn't acting; you MUST act when collision can't be avoided by the give-way vessel alone. Avoid altering to port for a vessel on your own port side.", '<div class="shape">🧭</div>');
+  html += card("Safe speed & lookout — Rules 5, 6, 7", "Maintain a proper lookout by sight and hearing at all times. Proceed at a speed allowing effective action and a stop within an appropriate distance. Risk of collision exists if compass bearing of an approaching vessel does not appreciably change.", '<div class="shape">👁️</div>');
+
+  html += '<h2>Navigation lights</h2>';
+  for (const [t, s, d, n] of NAV_LIGHTS) html += card(t, s, dots(d), n);
+
+  html += '<h2>Day shapes</h2>';
+  for (const [t, s, g] of DAY_SHAPES) html += card(t, s, `<div class="shape">${g}</div>`);
+
+  html += '<h2>Sound signals — manoeuvring (Rule 34)</h2>';
+  for (const [t, seq] of SOUND_MANOEUVRE)
+    html += card(t, blasts(seq) + `<span style="color:var(--ink-dim)">${[...seq].map(b => b === 'S' ? 'short' : 'prolonged').join(' · ')}</span>`);
+
+  html += '<h2>Sound signals — restricted visibility (Rule 35)</h2>';
+  for (const [t, s, seq] of SOUND_FOG)
+    html += card(t, (seq ? blasts(seq) + ' ' : '') + s);
+
+  html += '<div class="footer-note">Quick reference only — always consult the current Collision Regulations (C.R.C., c. 1416) with Canadian modifications.</div>';
+  el('sec-rules').innerHTML = html;
+}
+
+/* ============================================================
+   SECTION: RADIO
+   ============================================================ */
+const VHF_CHANNELS = [
+  ["16", "156.800", "DISTRESS, URGENCY, SAFETY and calling. Mandatory listening watch underway."],
+  ["70", "156.525", "DSC — digital selective calling only (distress alerting). No voice."],
+  ["06", "156.300", "Intership safety, search & rescue coordination."],
+  ["13", "156.650", "Bridge-to-bridge navigation safety (1 W). Vessel traffic in some zones."],
+  ["09", "156.450", "Pleasure craft calling (heavy-traffic areas); commercial intership."],
+  ["10", "156.500", "Intership/coast — safety, SAR, some CCG operations."],
+  ["83A", "157.175", "Canadian Coast Guard working channel."],
+  ["22A", "157.100", "CCG liaison and Maritime Safety Information after announcement on 16."],
+  ["11 / 12 / 14", "—", "Vessel Traffic Services (VTS) — assignment varies by zone; consult RAMN/notices."],
+  ["21B / 25B / 83B", "—", "Continuous Marine Broadcast (CMB) — weather & NOTSHIP, receive only."],
+  ["WX1 / WX2 / WX3", "162.550 / .400 / .475", "Weatheradio Canada continuous marine weather."],
+];
+
+function renderRadio() {
+  let html = '<h2>Distress & urgency scripts</h2>';
+
+  html += `<div class="card" data-search="mayday distress script grave imminent danger">
+    <div class="card-title">🔴 MAYDAY — grave & imminent danger</div>
+    <div class="card-sub">Ch 16 · HIGH power · Only when life or vessel is in grave and imminent danger.</div>
+    <div class="script"><b>MAYDAY, MAYDAY, MAYDAY</b>
+THIS IS <i>[vessel name ×3, call sign]</i>
+<b>MAYDAY</b> <i>[vessel name, call sign]</i>
+POSITION <i>[lat/long or bearing & distance from a known point]</i>
+NATURE OF DISTRESS <i>[sinking, fire, MOB…]</i>
+ASSISTANCE REQUIRED
+<i>[persons on board, injuries, vessel description]</i>
+OVER</div>
+    <div class="card-note">DSC-equipped: press & hold the red DISTRESS button ≥ 5 s first, then voice MAYDAY on 16.</div>
+  </div>`;
+
+  html += `<div class="card" data-search="pan pan urgency script safety of vessel person">
+    <div class="card-title">🟠 PAN PAN — urgency</div>
+    <div class="card-sub">Ch 16 · Safety of vessel or person at risk, but not grave and imminent (e.g. disabled & drifting, medical advice needed).</div>
+    <div class="script"><b>PAN PAN, PAN PAN, PAN PAN</b>
+ALL STATIONS (or specific station) ×3
+THIS IS <i>[vessel name ×3, call sign]</i>
+POSITION <i>[…]</i> · <i>[nature of urgency]</i> · <i>[assistance wanted]</i>
+OVER</div>
+  </div>`;
+
+  html += `<div class="card" data-search="securite safety navigation warning weather">
+    <div class="card-title">🟢 SÉCURITÉ — safety</div>
+    <div class="card-sub">Announce on Ch 16, pass the message on a working channel. Important navigational or meteorological warnings (debris, extinguished light, tow restricting a channel…).</div>
+    <div class="script"><b>SÉCURITÉ, SÉCURITÉ, SÉCURITÉ</b>
+ALL STATIONS ×3 · THIS IS <i>[vessel ×3, call sign]</i>
+LISTEN CHANNEL <i>[working ch]</i> FOR NAVIGATIONAL WARNING
+OUT</div>
+  </div>`;
+
+  html += '<h2>Canadian VHF channels</h2>';
+  html += `<div class="card" data-search="vhf channels canada 16 70 06 13 83a 22a weather wx cmb vts"><table>
+    <tr><th>Ch</th><th>MHz</th><th>Use</th></tr>
+    ${VHF_CHANNELS.map(([c, f, u]) => `<tr><td class="ch">${c}</td><td style="white-space:nowrap">${f}</td><td>${u}</td></tr>`).join('')}
+  </table>
+  <div class="card-note">ROC-M certificate required to operate a marine VHF in Canada. Channel assignments vary by area — verify in the Radio Aids to Marine Navigation (RAMN).</div></div>`;
+
+  html += '<h2>Phonetic alphabet & Morse</h2>';
+  const phon = [
+    ["A","Alfa","·−"],["B","Bravo","−···"],["C","Charlie","−·−·"],["D","Delta","−··"],
+    ["E","Echo","·"],["F","Foxtrot","··−·"],["G","Golf","−−·"],["H","Hotel","····"],
+    ["I","India","··"],["J","Juliett","·−−−"],["K","Kilo","−·−"],["L","Lima","·−··"],
+    ["M","Mike","−−"],["N","November","−·"],["O","Oscar","−−−"],["P","Papa","·−−·"],
+    ["Q","Quebec","−−·−"],["R","Romeo","·−·"],["S","Sierra","···"],["T","Tango","−"],
+    ["U","Uniform","··−"],["V","Victor","···−"],["W","Whiskey","·−−"],["X","X-ray","−··−"],
+    ["Y","Yankee","−·−−"],["Z","Zulu","−−··"]
+  ];
+  html += `<div class="card" data-search="phonetic alphabet morse alfa bravo charlie nato"><table>
+    ${phon.map(([l, w, m], i) => i % 2 === 0 ?
+      `<tr><td class="ch">${l}</td><td>${w}</td><td style="letter-spacing:2px">${m}</td>
+           <td class="ch">${phon[i+1][0]}</td><td>${phon[i+1][1]}</td><td style="letter-spacing:2px">${phon[i+1][2]}</td></tr>` : '').join('')}
+  </table></div>`;
+
+  html += '<h2>Numbers & prowords</h2>';
+  html += card("Figures", "0 ZE-RO · 1 WUN · 2 TOO · 3 TREE · 4 FOW-ER · 5 FIFE · 6 SIX · 7 SEV-EN · 8 AIT · 9 NIN-ER · Decimal DAY-SEE-MAL");
+  html += card("Common prowords", "OVER — my transmission ended, reply expected · OUT — exchange ended, no reply expected · ROGER — received & understood · WILCO — will comply · SAY AGAIN — repeat · SEELONCE MAYDAY — imposed radio silence during distress · SEELONCE FEENEE — distress traffic ended");
+
+  html += '<div class="footer-note">Distress procedure per the Radiocommunication Regulations & RIC-21. Never transmit a false distress — it is an offence.</div>';
+  el('sec-radio').innerHTML = html;
+}
+
+/* ============================================================
+   SECTION: CALLING-IN POINTS — St. Lawrence Seaway & Great Lakes
+   Sources: Seaway Practices & Procedures (March 2026), Schedule III
+   Calling-In Table & s.60–65; SOR/84-335 (St. Clair & Detroit River
+   Navigation Safety Regs); 33 CFR 161.45 & USCG VTS SMR User Manual.
+   ============================================================ */
+const SEAWAY_SECTORS = [
+  [1, "Seaway Beauharnois", 14, "C.I.P. 2 → C.I.P. 6–7 (Montreal – Lake St. Francis)", 14],
+  [2, "Seaway Eisenhower", 12, "C.I.P. 6–7 → C.I.P. 10–11 (Snell & Eisenhower Locks)", 12],
+  [3, "Seaway Iroquois", 11, "C.I.P. 10–11 → Crossover Island (Iroquois Lock)", 11],
+  [4, "Seaway Clayton", 13, "Crossover Island → Cape Vincent (Thousand Islands)", 13],
+  [4, "Seaway Sodus", 12, "Cape Vincent → Mid-Lake Ontario", 16],
+  [5, "Seaway Newcastle", 11, "Mid-Lake Ontario → C.I.P. 15 (Port Weller)", 16],
+  [6, "Seaway Welland", 14, "C.I.P. 15 → C.I.P. 16 (Welland Canal)", 14],
+  [7, "Seaway Long Point", 11, "C.I.P. 16 → Long Point (Lake Erie)", 16],
+];
+
+/* [where, station, ch, extra items to report beyond name & location] */
+const CIP_UP = [
+  ["Entering Sector 1 from the lower St. Lawrence (or Montreal Hbr before getting underway)", "Seaway Beauharnois", 14, "Destination · drafts F&A · cargo · dangerous cargo (nature, qty, IMO class, stowage) · pilot req. Lake Ontario · confirm pilot Upper Beauharnois Lk (inland ships)"],
+  ["C.I.P. 2 — entering Sector 1 (order of passing through established)", "Seaway Beauharnois", 14, ""],
+  ["C.I.P. 3 (order of passing through established)", "Seaway Beauharnois", 14, ""],
+  ["Exiting Upper Beauharnois Lock", "Seaway Beauharnois", 14, "ETA C.I.P. 7 · confirm pilot Snell Lock (inland ships)"],
+  ["C.I.P. 7 — leaving Sector 1", "Seaway Beauharnois", 14, ""],
+  ["C.I.P. 7 — entering Sector 2", "Seaway Eisenhower", 12, "ETA Snell Lock"],
+  ["C.I.P. 8 (order established)", "Seaway Eisenhower", 12, ""],
+  ["C.I.P. 8A", "Seaway Eisenhower", 12, ""],
+  ["Exiting Eisenhower Lock", "Seaway Eisenhower", 12, "ETA C.I.P. 11 · confirm pilot Lake Ontario · all ports of call"],
+  ["C.I.P. 11 — leaving Sector 2", "Seaway Eisenhower", 12, ""],
+  ["C.I.P. 11 — entering Sector 3", "Seaway Iroquois", 11, ""],
+  ["C.I.P. 12 (order established)", "Seaway Iroquois", 11, ""],
+  ["Exiting Iroquois Lock", "Seaway Iroquois", 11, "ETA Crossover Island"],
+  ["Crossover Island — leaving Sector 3", "Seaway Iroquois", 11, ""],
+  ["Crossover Island — entering Sector 4", "Seaway Clayton", 13, "ETA Cape Vincent or river port · confirm pilot Lake Ontario"],
+  ["Wolfe Is. Cut (Beauvais Pt) — if leaving main channel", "Seaway Clayton", 13, "ETA Kingston"],
+  ["Cape Vincent", "Seaway Clayton", 13, "ETA Sodus Point · ETA Port Weller (C.I.P. 15) or Lake Ontario port · pilot req. Port Weller"],
+  ["Sodus Point", "Seaway Sodus", 12, "ETA mid-Lake Ontario · ETA Newcastle"],
+  ["Mid-Lake Ontario — leaving Sector 4", "Seaway Sodus", 12, ""],
+  ["Mid-Lake Ontario — entering Sector 5", "Seaway Newcastle", 11, "Pilot req. Lake Erie"],
+  ["Newcastle", "Seaway Newcastle", 11, "Updated ETA Port Weller (C.I.P. 15) or Lake Ontario port · confirm pilot Port Weller"],
+  ["C.I.P. 15 (order established)", "Seaway Welland", 14, ""],
+  ["Port Colborne piers", "Seaway Welland", 14, "ETA Long Point"],
+  ["C.I.P. 16", "Seaway Long Point", 11, ""],
+  ["Long Point — leaving Sector 7", "Seaway Long Point", 11, ""],
+];
+
+const CIP_DOWN = [
+  ["Long Point — entering Sector 7", "Seaway Long Point", 11, "ETA C.I.P. 16 or port · dangerous cargo (nature, qty, IMO class, stowage) · destination · drafts F&A · cargo · pilot req. Lake Ontario"],
+  ["C.I.P. 16 (order of passing through established)", "Seaway Welland", 14, ""],
+  ["Exiting Lock 1, Welland Canal", "Seaway Welland", 14, "ETA Newcastle · ETA Cape Vincent or Lake Ontario port · pilot req. Cape Vincent"],
+  ["C.I.P. 15", "Seaway Newcastle", 11, ""],
+  ["Newcastle", "Seaway Newcastle", 11, "ETA mid-Lake Ontario · ETA Sodus Point"],
+  ["Mid-Lake Ontario — leaving Sector 5", "Seaway Newcastle", 11, ""],
+  ["Mid-Lake Ontario — entering Sector 4", "Seaway Sodus", 12, ""],
+  ["Sodus Point", "Seaway Sodus", 12, "Updated ETA Cape Vincent or Lake Ontario port · confirm river pilot Cape Vincent · pilot req. Snell / Upper Beauharnois Lk (inland ships)"],
+  ["Cape Vincent", "Seaway Clayton", 13, "ETA Crossover Island or river port"],
+  ["Wolfe Is. Cut (Quebec Head) — entering main channel", "Seaway Clayton", 13, "ETA Crossover Island or river port"],
+  ["Crossover Island — leaving Sector 4", "Seaway Clayton", 13, ""],
+  ["Crossover Island — entering Sector 3", "Seaway Iroquois", 11, ""],
+  ["C.I.P. 14", "Seaway Iroquois", 11, ""],
+  ["C.I.P. 13 (order established)", "Seaway Iroquois", 11, ""],
+  ["Exiting Iroquois Lock", "Seaway Iroquois", 11, "ETA C.I.P. 10 · harbour/river pilot req. St. Lambert · confirm pilot Snell Lock (inland ships)"],
+  ["C.I.P. 10 — leaving Sector 3", "Seaway Iroquois", 11, ""],
+  ["C.I.P. 10 — entering Sector 2", "Seaway Eisenhower", 12, ""],
+  ["C.I.P. 9 (order established)", "Seaway Eisenhower", 12, "ETA Snell Lock"],
+  ["Exiting Snell Lock", "Seaway Eisenhower", 12, "ETA C.I.P. 6"],
+  ["C.I.P. 6 — leaving Sector 2", "Seaway Eisenhower", 12, ""],
+  ["C.I.P. 6 — entering Sector 1", "Seaway Beauharnois", 14, ""],
+  ["C.I.P. 5 (order established)", "Seaway Beauharnois", 14, ""],
+  ["Exiting Lower Beauharnois Lock", "Seaway Beauharnois", 14, "Confirm harbour/river pilot St. Lambert · Montreal Harbour berth no. (if applicable)"],
+  ["St. Nicholas Island", "Seaway Beauharnois", 14, ""],
+  ["St. Lambert Lock → C.I.P. 2 — leaving Sector 1", "Seaway Beauharnois", 14, ""],
+];
+
+/* RAMN 2026 Table 3-34 — [CIP, sector, name, conditions, channel]
+   Numbers = mandatory (NSR 2020) · Letters = voluntary (Sarnia VTS Areas) */
+const SARNIA_POINTS = [
+  ["A", 1, "De Tour Reef Light / Cordwood Point buoy “1”", "Voluntary · De Tour for St. Marys River transits; specify Cordwood Point to/from Lake Michigan", 11],
+  ["B", 1, "Great Duck Island", "Voluntary · line Great Duck Is. light – Presque Isle light", 11],
+  ["C", 1, "Cove Island", "Voluntary · to/from Georgian Bay — call Sarnia MCTS on Ch 26", 11],
+  ["D", 1, "Harbor Beach / Point Clark", "Voluntary · specify Point Clark on Georgian Bay courses, Harbor Beach otherwise", 11],
+  ["1", 1, "30 min north of Lake Huron Cut buoy “11”", "Downbound only", 11],
+  ["E", 1, "Lake Huron Cut light buoy “11”", "Voluntary · zone boundary", 11],
+  ["2", 1, "Lake Huron Cut Light “7”", "Downbound only", 11],
+  ["3", 1, "Lake Huron Cut light buoy “1”", "Upbound only", 11],
+  ["4", 1, "St. Clair / Black River Junction Light", "", 11],
+  ["5", 1, "Stag Island Upper Light", "Upbound only", 11],
+  ["6", 1, "Marine City Salt Dock light", "", 11],
+  ["7", 1, "Grande Pointe light “23”", "Downbound only", 11],
+  ["8", 1, "St. Clair Flats Canal light “2”", "Upbound only", 11],
+  ["9", "—", "Lake St. Clair Light", "Sector change — switch channel", "11↔12"],
+  ["10", 2, "Belle Isle light", "Downbound only", 12],
+  ["10A", 2, "Rouge River — 20 min out", "20 min before entering/leaving Rouge River or Shortcut Canal", 12],
+  ["10B", 2, "Rouge River — at entrance", "Immediately before entering/leaving", 12],
+  ["11", 2, "Grassy Island light", "", 12],
+  ["12", 2, "Detroit River light", "", 12],
+  ["F", 2, "Southeast Shoal", "Voluntary", 12],
+  ["G", 2, "Long Point", "Voluntary · line 152°T from Long Point light", 12],
+];
+
+/* RAMN 2026 Table 3-31 — VHF listening watch, Great Lakes Basin */
+const GL_WATCH = [
+  ["C.I.P. 2 → 6-7 (Seaway Beauharnois)", "Seaway Ch 14 + Ch 16", "Ch 13 exemption"],
+  ["C.I.P. 6-7 → 10-11 (Seaway Eisenhower)", "Seaway Ch 12 + Ch 16", "Ch 13 exemption"],
+  ["C.I.P. 10-11 → Crossover Is. (Seaway Iroquois)", "Seaway Ch 11 + Ch 16", "Ch 13 exemption"],
+  ["Crossover Is. → Cape Vincent (Seaway Clayton)", "Bridge Ch 13 + Ch 16", "Seaway Clayton on Ch 12 through this area"],
+  ["Cape Vincent → mid-Lake Ontario (Seaway Sodus)", "Bridge Ch 13 + Ch 16", "Seaway Sodus also on Ch 12"],
+  ["Mid-Lake Ontario → C.I.P. 15 (Seaway Newcastle)", "Bridge Ch 13 + Ch 16", "Seaway Newcastle operates on Ch 11"],
+  ["C.I.P. 15 → 16 (Welland Canal)", "Seaway Ch 14 + Ch 16", "Ch 13 exemption"],
+  ["C.I.P. 16 → Long Point (Seaway Long Point)", "Bridge Ch 13 + Ch 16", "Seaway Long Point on Ch 11"],
+  ["Long Point → Detroit River Light (Lake Erie)", "Bridge Ch 13 + Ch 16", "Sarnia MCTS on Ch 12"],
+  ["Detroit River Light → Lake St. Clair Light", "Bridge Ch 13 + MCTS Ch 12", "Sarnia monitors Ch 16 for you"],
+  ["Lake St. Clair Light → Lake Huron Cut buoy “11”", "Bridge Ch 13 + MCTS Ch 11", "Sarnia monitors Ch 16 for you"],
+  ["Huron Cut buoy “11” → De Tour (incl. Cove Is.)", "Bridge Ch 13 + Ch 16", "Sarnia MCTS on Ch 11, Lake Huron"],
+  ["De Tour → Île Parisienne (St. Marys River)", "Bridge Ch 13 + Ch 12", "Soo Traffic monitors Ch 16 for you"],
+  ["Île Parisienne → Lakes Superior / Michigan", "Bridge Ch 13 + Ch 16", ""],
+];
+
+/* RAMN 2026 s.3.4 — Standard VTS Reporting template designators */
+const VTS_DESIGNATORS = [
+  ["A", "Vessel identity — name, flag, call sign, IMO no., MMSI"],
+  ["B", "Time (6-digit day-hour-minute group, UTC)"],
+  ["C", "Position — lat/long"],
+  ["D", "Position — true bearing & distance from a named landmark"],
+  ["E", "Course (3 digits, true)"], ["F", "Speed (knots & tenths)"],
+  ["G", "Last port of call"], ["H", "Entry — time & point of entry"],
+  ["I", "Destination and ETA"], ["J", "Pilot — on board, or ETA of boarding"],
+  ["K", "Exit — time & point, or arrival at destination"], ["L", "Route — intended track"],
+  ["M", "Radio — stations/frequencies guarded"], ["N", "Next report — time and/or position"],
+  ["O", "Draught — max present static, metres & cm"], ["P", "Cargo — incl. dangerous goods details"],
+  ["Q", "Defect / damage / deficiency / limitations"], ["R", "Pollution or dangerous goods lost overboard"],
+  ["S", "Weather — sea & ice conditions"], ["T", "Agent — vessel's representative or owner"],
+  ["U", "Vessel size & type"], ["V", "Medic — medical personnel on board"],
+  ["W", "Persons on board"], ["X", "Remarks — any other information"],
+  ["Y", "Relay — request to relay to another system"], ["Z", "End of report"],
+];
+
+const SOO_POINTS = [
+  ["1 · Ile Parisienne Light", "Downbound"],
+  ["2 · Gros Cap Reefs Light", "Upbound"],
+  ["3 · Round Island Light 32", "Both"],
+  ["4 · Pointe Louise Light", "Both"],
+  ["5 · West end of locks (W Center Pierhead)", "Upbound"],
+  ["6 · East end of locks (E Center Pierhead)", "Downbound"],
+  ["7 · Mission Point (Light 99)", "Both"],
+  ["8 · Six Mile Point", "Both"],
+  ["9 · Ninemile Point (Light 80)", "Both"],
+  ["10 · West Neebish Channel (Light 29)", "Downbound"],
+  ["11 · Munuscong Lake Junction Buoy", "Both"],
+  ["12 · De Tour Reef Light", "Both"],
+];
+
+const cipRows = list => `<table>
+  <tr><th>At / abeam</th><th>Report</th></tr>
+  ${list.map(([loc, stn, ch, extra]) => `<tr>
+    <td style="min-width:120px"><b>${loc}</b><br><span class="ch">${stn} · Ch ${ch}</span></td>
+    <td>Ship's name · location${extra ? `<br><span style="color:var(--ink-dim)">+ ${extra}</span>` : ''}</td>
+  </tr>`).join('')}
+</table>`;
+
+function renderCIP() {
+  let html = '<h2>How to call in — Seaway</h2>';
+  html += `<div class="card" data-search="how to call in seaway procedure listening watch eta update report format">
+    <div class="card-title">The basics (Seaway Practices &amp; Procedures, Part IV)</div>
+    <div class="card-sub">Maintain listening watch on the sector's assigned channel for the whole sector. Report to the designated station when <b>opposite</b> each C.I.P. or checkpoint. Report any ETA change of <b>30 minutes or more</b>. Arrival is only "given" once a Seaway station acknowledges.</div>
+    <div class="script"><b>[Station]</b> — THIS IS <i>[ship's name]</i>
+AT <i>[C.I.P. / checkpoint]</i>
+<i>[required items — see table]</i>
+OVER</div>
+    <div class="card-note">Between C.I.P. 2 and Tibbetts Point, and C.I.P. 15–16: wheelhouse manned by master or certified officer + helmsman, engines manned and ready for immediate response (s. 35).</div>
+  </div>`;
+
+  html += '<h2>Seaway control sectors</h2>';
+  html += `<div class="card" data-search="seaway sectors beauharnois eisenhower iroquois clayton sodus newcastle welland long point channel 14 12 11 13"><table>
+    <tr><th>Sec</th><th>Station</th><th>Limits</th><th>Call/Work</th><th>Watch</th></tr>
+    ${SEAWAY_SECTORS.map(([n, s, ch, lim, w]) => `<tr><td class="ch">${n}</td><td style="white-space:nowrap">${s}</td><td>${lim}</td><td class="ch">Ch ${ch}</td><td>Ch ${w}</td></tr>`).join('')}
+  </table>
+  <div class="card-note">Ch 14 = 156.700 · Ch 13 = 156.650 · Ch 12 = 156.600 · Ch 11 = 156.550 MHz. Ch 16 for distress &amp; calling throughout.</div></div>`;
+
+  html += '<h2>⬆️ Upbound — Montreal → Lake Erie</h2>';
+  html += `<div class="card" data-search="upbound calling in points cip 2 3 7 8 8a 11 12 15 16 beauharnois eisenhower iroquois clayton sodus newcastle welland long point cape vincent crossover island wolfe island port colborne">${cipRows(CIP_UP)}</div>`;
+
+  html += '<h2>⬇️ Downbound — Lake Erie → Montreal</h2>';
+  html += `<div class="card" data-search="downbound calling in points cip 16 15 14 13 10 9 6 5 long point welland newcastle sodus clayton cape vincent iroquois eisenhower snell beauharnois st lambert st nicholas island">${cipRows(CIP_DOWN)}</div>`;
+
+  html += '<h2>St. Lambert Lock — special procedure</h2>';
+  html += card("Downbound in St. Lambert Lock (s. 64)",
+    "In the lock: switch to Ch 10 for a traffic report from Quebec Ship Traffic Management Centre, then return to Ch 14 until clear of the lock chamber. Once clear of the downstream end of the lower approach wall, call “Seaway Beauharnois” and request permission to switch to Ch 10. If meeting a ship before C.I.P. 2, stay on Ch 14 until the meeting is complete.",
+    '<div class="shape">🔀</div>');
+
+  html += '<h2>Ports, docks & anchorages (s. 65)</h2>';
+  html += card("Lake port check-in",
+    "Toronto & Hamilton: report 1 nm outside the harbour limits. Other lake ports: report when crossing the harbour entrance. On arrival at a port, dock or anchorage, report with an ETD if possible. Report destination and ETA at the next checkpoint at least 4 hours before departure.",
+    '<div class="shape">⚓</div>');
+
+  html += '<h2>Great Lakes listening watch (RAMN Table 3-31)</h2>';
+  html += `<div class="card" data-search="listening watch great lakes channel 13 16 bridge to bridge exemption watch requirements vhf">
+    <div class="card-sub" style="margin-bottom:8px">Guard <b>Ch 13</b> bridge-to-bridge continuously throughout the Great Lakes Basin — except St. Lambert → Crossover Island and the Welland Canal, where the Seaway channel is guarded instead. Guard <b>Ch 16</b> everywhere except the Sarnia VTS zone and St. Marys River, where the centre monitors 16 on your behalf. Ch 13 max power 1 W (25 W in emergency).</div>
+    <table>
+      <tr><th>Waters</th><th>Monitor</th><th>Notes</th></tr>
+      ${GL_WATCH.map(([w, m, n]) => `<tr><td>${w}</td><td class="ch" style="white-space:normal">${m}</td><td>${n}</td></tr>`).join('')}
+    </table>
+    <div class="card-note">VHF-DSC radio required over 8 m, carrying 6+ passengers, or towboats with tow ≥ 20 m; second radio if ≥ 300 GT or passenger vessel ≥ 20 m (NSR 2020).</div>
+  </div>`;
+
+  html += '<h2>Sarnia Traffic — Huron / St. Clair / Detroit / Erie</h2>';
+  html += `<div class="card" data-search="sarnia traffic vts st clair river lake st clair detroit river channel 11 12 26 reporting points calling in huron cut stag island marine city grande pointe belle isle grassy island rouge river southeast shoal long point cove island great duck harbor beach point clark de tour cordwood sailing plan position report final report">
+    <div class="card-title">Call “SARNIA TRAFFIC”</div>
+    <div class="card-sub"><b>Sector 1 · Ch 11</b>: De Tour Reef Light → Lake St. Clair Light. <b>Sector 2 · Ch 12</b>: Lake St. Clair Light → Long Point (Lake Erie).<br>
+    Mandatory <b>Zone</b> (numbered points): Lake Huron Cut buoy “11” → East/West Outer Channel buoys “1”, Lake Erie. Voluntary <b>Areas</b> (lettered points): the rest of Lake Huron from De Tour and Lake Erie to Long Point.<br><br>
+    <b>Sailing Plan</b> [A B C/D H I N P Q R T] — at least 15 min before entering the zone/areas and 15 min before departing a berth.<br>
+    <b>Position Report</b> [A B C/D N] — at every calling-in point and immediately before departing a berth.<br>
+    <b>Final Report</b> [A B C/D K] — on berthing, or just before exiting (skip if entering another VTS zone). Times in UTC.</div>
+    <table style="margin-top:8px">
+      <tr><th>CIP</th><th>Reporting point</th><th>Ch</th></tr>
+      ${SARNIA_POINTS.map(([n, s, p, cond, c]) => `<tr><td class="ch">${n}</td><td><b>${p}</b>${cond ? `<br><span style="color:var(--ink-dim)">${cond}</span>` : ''}</td><td class="ch">${c}</td></tr>`).join('')}
+    </table>
+    <div class="card-note">Sarnia Traffic monitors the zone by radar &amp; AIS. Numbered CIPs are mandatory under the Navigation Safety Regulations, 2020.</div>
+  </div>`;
+
+  html += '<h2>Standard VTS report — designators</h2>';
+  html += `<div class="card" data-search="vts reporting template designators sailing plan position report alpha bravo identity destination eta draught cargo pollution agent persons on board"><table>
+    ${VTS_DESIGNATORS.map(([d, t], i) => `<tr><td class="ch">${d}</td><td>${t}</td></tr>`).join('')}
+  </table></div>`;
+
+  html += '<h2>Soo Traffic — St. Marys River</h2>';
+  html += `<div class="card" data-search="soo traffic vts st marys river channel 12 ile parisienne gros cap round island pointe louise mission point six mile ninemile neebish munuscong de tour reef locks channel 14">
+    <div class="card-title">Call “SOO TRAFFIC” — Ch 12</div>
+    <div class="card-sub">USCG VTS, De Tour Reef Light to Île Parisienne Light (33 CFR 161.45). Listening watch <b>Ch 12</b> (and 13 bridge-to-bridge) throughout the VTS area — Soo Traffic monitors Ch 16 on your behalf. Soo Locks lockmaster (WUE-21) works <b>Ch 14</b>. Applies to power vessels ≥ 20 m and towing vessels ≥ 8 m.</div>
+    <table style="margin-top:8px">
+      <tr><th>Reporting point</th><th>Dir</th></tr>
+      ${SOO_POINTS.map(([p, d]) => `<tr><td>${p}</td><td>${d}</td></tr>`).join('')}
+    </table>
+  </div>`;
+
+  html += '<div class="footer-note">Compiled from the Seaway Handbook — Practices &amp; Procedures (March 2026), Schedule III &amp; ss. 60–65; RAMN 2026 Annual Edition v5 (June 2026), ss. 3.4, 3.9, Tables 3-31 to 3-34; 33 CFR 161.45. C.I.P. positions are marked on the General Seaway Plan and navigation charts. Always verify against the current editions and Notices to Mariners/Shipping.</div>';
+  el('sec-cip').innerHTML = html;
+}
+
+/* ============================================================
+   SECTION: BUOYAGE (IALA Region B — Canada)
+   ============================================================ */
+const buoySwatch = (css, topmark = '') =>
+  `<div>${topmark ? `<div class="topmark">${topmark}</div>` : ''}<div class="buoy-swatch" style="${css}"></div></div>`;
+
+function renderBuoys() {
+  let html = '<h2>Lateral buoys — IALA Region B</h2>';
+  html += card("Returning from sea (upstream)",
+    "“RED, RIGHT, RETURNING.” Keep RED buoys to STARBOARD and GREEN to PORT when heading upstream / into harbour. Reverse when heading to sea.",
+    '<div class="shape">🧭</div>');
+  html += card("Starboard-hand buoy",
+    "RED, conical (nun) or pillar. EVEN numbers. Red light: Fl, Q, or Fl(4). Keep to starboard going upstream.",
+    buoySwatch("background:#d90429"));
+  html += card("Port-hand buoy",
+    "GREEN, can (cylindrical) or pillar. ODD numbers. Green light: Fl, Q, or Fl(4). Keep to port going upstream.",
+    buoySwatch("background:#2d8a39;border-radius:5px"));
+  html += card("Bifurcation — channel splits",
+    "Red-green banded. Top band colour = preferred channel side. Red over green: preferred channel keeps it to starboard (like a red buoy). Green over red: treat like a green buoy.",
+    buoySwatch("background:linear-gradient(#d90429 50%, #2d8a39 50%)"));
+
+  html += '<h2>Cardinal buoys — pass on the named side</h2>';
+  html += card("North cardinal", "Black over yellow. Topmark: both cones point UP. Light: white, Q or VQ continuous. Safe water is NORTH of the buoy.",
+    buoySwatch("background:linear-gradient(#111 50%, #ffd60a 50%)", "▲<br>▲"));
+  html += card("East cardinal", "Black, yellow band. Topmark: cones base-to-base (◆ shape). Light: Q(3) or VQ(3). Safe water is EAST.",
+    buoySwatch("background:linear-gradient(#111 33%, #ffd60a 33%, #ffd60a 66%, #111 66%)", "▲<br>▼"));
+  html += card("South cardinal", "Yellow over black. Topmark: both cones point DOWN. Light: Q(6)+long flash. Safe water is SOUTH.",
+    buoySwatch("background:linear-gradient(#ffd60a 50%, #111 50%)", "▼<br>▼"));
+  html += card("West cardinal", "Yellow, black band. Topmark: cones point-to-point (wineglass — W!). Light: Q(9) or VQ(9). Safe water is WEST.",
+    buoySwatch("background:linear-gradient(#ffd60a 33%, #111 33%, #111 66%, #ffd60a 66%)", "▼<br>▲"));
+  html += card("Clock-face memory aid", "Light groups follow a clock: East 3 o'clock → Q(3) · South 6 → Q(6)+LFl · West 9 → Q(9) · North 12 → continuous.", '<div class="shape">🕒</div>');
+
+  html += '<h2>Other marks</h2>';
+  html += card("Isolated danger", "Black with red horizontal band(s). Topmark: TWO black spheres. Light: white Fl(2). Danger directly below — keep clear all round.",
+    buoySwatch("background:linear-gradient(#111 40%, #d90429 40%, #d90429 60%, #111 60%)", "●<br>●"));
+  html += card("Safe water (fairway)", "RED & WHITE vertical stripes. Topmark: single red sphere. Light: white — Iso, Oc, LFl 10s, or Morse “A”. Navigable water all round; often marks a fairway entrance.",
+    buoySwatch("background:repeating-linear-gradient(90deg,#d90429 0 7px,#fff 7px 14px)", "●"));
+  html += card("Special purpose", "YELLOW; X topmark. Yellow light Fl(4). Marks anchorages, cables, pipelines, military zones — consult the chart.",
+    buoySwatch("background:#ffd60a", "✕"));
+  html += card("Hazard buoy (Canadian inland)", "White with orange diamond and orange bands — marks a hazard such as rocks or shoals (Private Buoy / CANS standard).",
+    buoySwatch("background:#fff;border:1px solid #ccc", "🔶"));
+  html += card("Keep-out / control buoys (Canadian inland)", "White & orange: crossed diamond = keep out; orange circle = restriction (speed limit, no wake). Common on inland waters under VORR.",
+    buoySwatch("background:#fff;border:1px solid #ccc", "⊘"));
+
+  html += '<div class="footer-note">Canada is IALA Region B. Full details: Transport Canada TP 968 — The Canadian Aids to Navigation System.</div>';
+  el('sec-buoys').innerHTML = html;
+}
+
+/* ============================================================
+   SECTION: TOOLS
+   ============================================================ */
+const BEAUFORT = [
+  [0,"Calm","< 1","Sea like a mirror"],
+  [1,"Light air","1–3","Ripples, no foam"],
+  [2,"Light breeze","4–6","Small wavelets, glassy crests"],
+  [3,"Gentle breeze","7–10","Scattered whitecaps"],
+  [4,"Moderate breeze","11–16","Frequent whitecaps, small waves"],
+  [5,"Fresh breeze","17–21","Moderate waves, many whitecaps, some spray"],
+  [6,"Strong breeze","22–27","Large waves, white foam crests everywhere"],
+  [7,"Near gale","28–33","Sea heaps up, foam blown in streaks"],
+  [8,"Gale","34–40","Moderately high waves, breaking crests"],
+  [9,"Strong gale","41–47","High waves, dense foam, visibility affected"],
+  [10,"Storm","48–55","Very high waves, sea white, heavy tumbling"],
+  [11,"Violent storm","56–63","Exceptionally high waves"],
+  [12,"Hurricane","64+","Air filled with foam & spray, visibility very poor"],
+];
+
+/* CIP passage legs — Detroit & St. Clair Rivers (user-supplied distances).
+   [point name, CIP label, distance to NEXT point (NM), channel on this leg] */
+const CIP_ROUTES = {
+  up: {
+    label: "⬆️ Upbound — Detroit River → Lake Huron",
+    pts: [
+      ["Detroit River Lt", "12", 13.60, "12"],
+      ["Grassy Island", "11", 23.31, "12"],
+      ["Lake St. Clair Crib Lt", "9", 4.39, "12↔11"],
+      ["Light X32", "8", 14.24, "11"],
+      ["Salt Dock", "6", 13.69, "11"],
+      ["Stag Island Lt", "5", 4.57, "11"],
+      ["Black River", "4", 2.40, "11"],
+      ["Buoys 1&2", "3", 52.05, "11"],
+      ["Harbour Beach", "D", null, "11"],
+    ],
+    note: "Numbered CIPs are mandatory; lettered are voluntary. Channel changes 12 → 11 at Lake St. Clair Crib Lt. All reports to Sarnia Traffic.",
+  },
+  down: {
+    label: "⬇️ Downbound — Lake Huron → Detroit River",
+    pts: [
+      ["Harbour Beach", "D", 59.53, "11"],
+      ["Buoys 11&12", "1·E", 7.88, "11"],
+      ["Buoys 7-8 / Light 7", "2", 5.47, "11"],
+      ["Black River", "4", 18.27, "11"],
+      ["Salt Dock", "6", 6.96, "11"],
+      ["Light 23", "7", 11.59, "11"],
+      ["Lake St. Clair Crib Lt", "9", 11.98, "11↔12"],
+      ["Belle Isle Station", "10", 11.39, "12"],
+      ["Grassy Island", "11", 13.07, "12"],
+      ["Detroit River Lt", "12", 35.64, "12"],
+      ["Southeast Shoal", "F", null, "12"],
+    ],
+    note: "CIP 1: report 30 min north of Buoys 11&12. At Buoys 11&12 (E): downbounders make a Sécurité call to All Stations on Ch 11. Channel changes 11 → 12 at Lake St. Clair Crib Lt. Numbered CIPs mandatory; lettered voluntary. Next after Southeast Shoal: Long Point / C.I.P. 16.",
+  },
+};
+
+const UNITS = {
+  Distance: { base: "m", u: { "nautical miles": 1852, "kilometres": 1000, "statute miles": 1609.344, "metres": 1, "feet": 0.3048, "fathoms": 1.8288, "cables": 185.2 } },
+  Speed:    { base: "m/s", u: { "knots": 0.514444, "km/h": 0.277778, "mph": 0.44704, "m/s": 1 } },
+  Depth:    { base: "m", u: { "metres": 1, "feet": 0.3048, "fathoms": 1.8288 } },
+  Pressure: { base: "hPa", u: { "hPa / mb": 1, "inHg": 33.8639, "kPa": 10, "mmHg": 1.33322 } },
+  Volume:   { base: "L", u: { "litres": 1, "imperial gallons": 4.54609, "US gallons": 3.78541 } },
+};
+
+function renderTools() {
+  let html = '<h2>Speed · Distance · Time</h2>';
+  html += `<div class="card" data-search="speed distance time eta calculator">
+    <div class="card-sub" style="margin-bottom:10px">Enter any two — the third is calculated. ETA uses your device's current time.</div>
+    <div class="tool-grid">
+      <div class="field"><label>Distance (nm)</label><input type="number" inputmode="decimal" id="sdt-d" placeholder="—"></div>
+      <div class="field"><label>Speed (kn)</label><input type="number" inputmode="decimal" id="sdt-s" placeholder="—"></div>
+    </div>
+    <div class="field"><label>Time (hours, e.g. 2.5)</label><input type="number" inputmode="decimal" id="sdt-t" placeholder="—"></div>
+    <button class="btn" onclick="calcSDT()">Calculate</button>
+    <div class="result-box" id="sdt-out" style="display:none"></div>
+  </div>`;
+
+  html += '<h2>CIP passage times — Detroit &amp; St. Clair</h2>';
+  html += `<div class="card" data-search="cip passage time calculator detroit st clair river upbound downbound speed eta grassy island salt dock stag island black river harbour beach belle isle southeast shoal light 23 x32 buoys">
+    <div class="pill-row" style="margin-bottom:8px">
+      <button class="pill" id="cip-up" onclick="setCipDir('up')">⬆️ Upbound</button>
+      <button class="pill" id="cip-down" onclick="setCipDir('down')">⬇️ Downbound</button>
+    </div>
+    <div class="tool-grid">
+      <div class="field"><label>Speed (kn)</label><input type="number" inputmode="decimal" id="cip-spd" value="10.4" step="0.1" oninput="renderCipChart()"></div>
+      <div class="field"><label>Last column</label><select id="cip-mode" onchange="renderCipChart()"><option value="cum">Elapsed time</option><option value="eta">ETA from now</option></select></div>
+    </div>
+    <div class="tool-grid">
+      <div class="field"><label>From</label><select id="cip-from" onchange="cipSpan()"></select></div>
+      <div class="field"><label>To</label><select id="cip-to" onchange="cipSpan()"></select></div>
+    </div>
+    <div class="result-box" id="cip-span-out" style="display:none"></div>
+    <div id="cip-chart" style="margin-top:10px"></div>
+    <div class="card-note" id="cip-note"></div>
+  </div>`;
+
+  html += '<h2>Unit converter</h2>';
+  html += `<div class="card" data-search="unit converter nautical miles knots fathoms metres feet celsius fahrenheit pressure gallons litres">
+    <div class="tool-grid">
+      <div class="field"><label>Category</label><select id="cv-cat" onchange="buildUnits();convert()">
+        ${Object.keys(UNITS).map(k => `<option>${k}</option>`).join('')}<option>Temperature</option>
+      </select></div>
+      <div class="field"><label>From</label><select id="cv-unit" onchange="convert()"></select></div>
+    </div>
+    <div class="field"><label>Value</label><input type="number" inputmode="decimal" id="cv-val" placeholder="0" oninput="convert()"></div>
+    <div class="result-box" id="cv-out">Enter a value above.</div>
+  </div>`;
+
+  html += '<h2>Beaufort wind scale</h2>';
+  html += `<div class="card" data-search="beaufort wind scale force gale storm hurricane knots sea state"><table>
+    <tr><th>F</th><th>Name</th><th>Knots</th><th>Sea state</th></tr>
+    ${BEAUFORT.map(([f, n, k, s]) => `<tr><td class="ch">${f}</td><td>${n}</td><td style="white-space:nowrap">${k}</td><td>${s}</td></tr>`).join('')}
+  </table></div>`;
+
+  html += '<h2>Handy figures</h2>';
+  html += card("Distances", "1 nm = 1852 m = 1.15 statute mi · 1 cable = 0.1 nm ≈ 185 m · 1 fathom = 6 ft = 1.83 m · 1 shot of anchor chain = 15 fathoms = 27.4 m (90 ft)");
+  html += card("Speed of sound & horizon", "Distance off by sound: ~1 nm per 5.5 s between flash and report. Horizon distance (nm) ≈ 2.08 × √height of eye (m).");
+  html += card("The 1-in-60 rule", "1° of course error ≈ 1 nm off track after 60 nm run. Doubles: 2° ≈ 2 nm, etc.");
+  html += card("Six-minute rule", "Distance run in 6 minutes (nm) = speed (kn) ÷ 10. At 12 kn you cover 1.2 nm every 6 min.");
+
+  html += '<div class="footer-note">Calculators are aids only — verify with your primary navigation systems.</div>';
+  el('sec-tools').innerHTML = html;
+  buildUnits();
+  setCipDir('up');
+}
+
+function calcSDT() {
+  const d = parseFloat(el('sdt-d').value);
+  const s = parseFloat(el('sdt-s').value);
+  const t = parseFloat(el('sdt-t').value);
+  const out = el('sdt-out');
+  out.style.display = 'block';
+  const fmtT = h => {
+    const hh = Math.floor(h), mm = Math.round((h - hh) * 60);
+    return `${hh} h ${String(mm).padStart(2, '0')} min`;
+  };
+  if (!isNaN(d) && !isNaN(s) && s > 0) {
+    const hours = d / s;
+    const eta = new Date(Date.now() + hours * 3600e3);
+    out.innerHTML = `Time: <b>${fmtT(hours)}</b><br>ETA (from now): <b>${eta.toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' })}</b>`;
+    el('sdt-t').value = (Math.round(hours * 100) / 100);
+  } else if (!isNaN(d) && !isNaN(t) && t > 0) {
+    out.innerHTML = `Required speed: <b>${(d / t).toFixed(1)} kn</b>`;
+    el('sdt-s').value = (d / t).toFixed(1);
+  } else if (!isNaN(s) && !isNaN(t)) {
+    out.innerHTML = `Distance covered: <b>${(s * t).toFixed(1)} nm</b>`;
+    el('sdt-d').value = (s * t).toFixed(1);
+  } else {
+    out.innerHTML = 'Enter any two of the three values.';
+  }
+}
+
+/* ---------- CIP passage time calculator ---------- */
+let cipDir = 'up';
+
+const fmtHM = hours => {
+  const total = Math.round(hours * 60);
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+};
+
+function setCipDir(dir) {
+  cipDir = dir;
+  el('cip-up').classList.toggle('on', dir === 'up');
+  el('cip-down').classList.toggle('on', dir === 'down');
+  const pts = CIP_ROUTES[dir].pts;
+  el('cip-from').innerHTML = pts.map((p, i) => `<option value="${i}">${p[1]} · ${p[0]}</option>`).join('');
+  el('cip-to').innerHTML = pts.map((p, i) => `<option value="${i}" ${i === pts.length - 1 ? 'selected' : ''}>${p[1]} · ${p[0]}</option>`).join('');
+  el('cip-note').textContent = CIP_ROUTES[dir].note;
+  renderCipChart();
+  cipSpan();
+}
+
+function cipSpeed() {
+  const s = parseFloat(el('cip-spd').value);
+  return (s > 0 && s < 60) ? s : null;
+}
+
+function renderCipChart() {
+  const spd = cipSpeed();
+  const mode = el('cip-mode').value;
+  const { label, pts } = CIP_ROUTES[cipDir];
+  if (!spd) { el('cip-chart').innerHTML = '<div class="card-sub">Enter a speed between 0 and 60 kn.</div>'; return; }
+  let cum = 0, totalNm = 0;
+  const now = Date.now();
+  const rows = pts.slice(0, -1).map((p, i) => {
+    const [from, cip, dist, ch] = p;
+    const to = pts[i + 1];
+    const legH = dist / spd;
+    cum += legH; totalNm += dist;
+    const last = mode === 'eta'
+      ? new Date(now + cum * 3600e3).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : fmtHM(cum);
+    return `<tr>
+      <td><b>${from} → ${to[0]}</b><br><span class="ch">CIP ${cip} · Ch ${ch}</span></td>
+      <td style="text-align:right">${dist.toFixed(1)}</td>
+      <td style="text-align:right">${fmtHM(legH)}</td>
+      <td style="text-align:right"><b>${last}</b></td>
+    </tr>`;
+  }).join('');
+  el('cip-chart').innerHTML = `
+    <div class="card-sub" style="margin-bottom:6px"><b>${label}</b> · ${spd} kn</div>
+    <table>
+      <tr><th>Leg</th><th style="text-align:right">NM</th><th style="text-align:right">Leg</th><th style="text-align:right">${mode === 'eta' ? 'ETA' : 'Elapsed'}</th></tr>
+      ${rows}
+      <tr><td><b>Total</b></td><td style="text-align:right"><b>${totalNm.toFixed(1)}</b></td><td></td><td style="text-align:right"><b>${mode === 'eta' ? new Date(now + (totalNm / spd) * 3600e3).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : fmtHM(totalNm / spd)}</b></td></tr>
+    </table>`;
+  cipSpan();
+}
+
+function cipSpan() {
+  const spd = cipSpeed();
+  const out = el('cip-span-out');
+  const a = parseInt(el('cip-from').value), b = parseInt(el('cip-to').value);
+  if (isNaN(a) || isNaN(b) || !spd) { out.style.display = 'none'; return; }
+  out.style.display = 'block';
+  if (a >= b) { out.innerHTML = '“From” must come before “To” along the route.'; return; }
+  const pts = CIP_ROUTES[cipDir].pts;
+  let nm = 0;
+  for (let i = a; i < b; i++) nm += pts[i][2];
+  const h = nm / spd;
+  const eta = new Date(Date.now() + h * 3600e3);
+  out.innerHTML = `${pts[a][0]} → ${pts[b][0]}: <b>${nm.toFixed(1)} nm</b> · <b>${fmtHM(h)}</b> at ${spd} kn<br>ETA (from now): <b>${eta.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</b>`;
+}
+
+function buildUnits() {
+  const cat = el('cv-cat').value;
+  const sel = el('cv-unit');
+  if (cat === 'Temperature') {
+    sel.innerHTML = '<option>°C</option><option>°F</option>';
+  } else {
+    sel.innerHTML = Object.keys(UNITS[cat].u).map(u => `<option>${u}</option>`).join('');
+  }
+}
+
+function convert() {
+  const cat = el('cv-cat').value, from = el('cv-unit').value;
+  const v = parseFloat(el('cv-val').value);
+  const out = el('cv-out');
+  if (isNaN(v)) { out.textContent = 'Enter a value above.'; return; }
+  const fmt = x => x >= 100 ? x.toFixed(1) : x >= 1 ? x.toFixed(2) : x.toFixed(4);
+  if (cat === 'Temperature') {
+    const c = from === '°C' ? v : (v - 32) * 5 / 9;
+    out.innerHTML = `<b>${fmt(c)}</b> °C &nbsp;·&nbsp; <b>${fmt(c * 9 / 5 + 32)}</b> °F`;
+    return;
+  }
+  const def = UNITS[cat];
+  const base = v * def.u[from];
+  out.innerHTML = Object.entries(def.u)
+    .map(([u, f]) => `<b>${fmt(base / f)}</b> ${u}`).join('<br>');
+}
+
+/* ============================================================
+   SECTION: STUDY — exam-style quiz
+   Categories: COLREGs, Buoyage, Radio, Safety & General
+   ============================================================ */
+const QUIZ = [
+  // COLREGs
+  ["COLREGs","At night you see a red light above a white light. It is most likely a vessel…",["Fishing, other than trawling","Trawling","Piloting","Not under command"],0],
+  ["COLREGs","Green over white all-round lights indicate a vessel…",["Trawling","Fishing with lines","At anchor","Constrained by draught"],0],
+  ["COLREGs","One short blast from a power-driven vessel means…",["I am altering course to starboard","I am altering course to port","My engines are going astern","I intend to overtake you"],0],
+  ["COLREGs","Five or more short and rapid blasts signal…",["Doubt about the other vessel's intentions / danger","Agreement to be overtaken","Request to pass port-to-port","Vessel aground"],0],
+  ["COLREGs","Two power-driven vessels meet head-on. Each should…",["Alter course to starboard","Alter course to port","Hold course and speed","Stop engines"],0],
+  ["COLREGs","In a crossing situation, the give-way vessel is the one that has the other on her…",["Starboard side","Port side","Stern","Bow"],0],
+  ["COLREGs","A vessel showing ball–diamond–ball day shapes is…",["Restricted in her ability to manoeuvre","Not under command","Aground","Constrained by her draught"],0],
+  ["COLREGs","A black cylinder day shape indicates a vessel…",["Constrained by her draught","At anchor","Engaged in dredging","Under sail and power"],0],
+  ["COLREGs","Two all-round red lights in a vertical line indicate a vessel…",["Not under command","Trawling","Aground","Restricted in ability to manoeuvre"],0],
+  ["COLREGs","In fog you hear one prolonged followed by two short blasts. It could be any of the following EXCEPT…",["A power-driven vessel making way","A sailing vessel","A vessel engaged in fishing","A vessel towing"],0],
+  ["COLREGs","A vessel is overtaking another when approaching from more than…",["22.5° abaft the other vessel's beam","11.25° abaft the beam","45° abaft the beam","two points forward of the beam"],0],
+  ["COLREGs","Three black balls in a vertical line by day indicate a vessel…",["Aground","Not under command","Fishing","Restricted in manoeuvrability"],0],
+  ["COLREGs","White over red all-round lights identify a…",["Pilot vessel on duty","Vessel trawling","Fishing vessel with outlying gear","Dredger"],0],
+  ["COLREGs","A power vessel underway but stopped in fog sounds…",["Two prolonged blasts every ≤ 2 minutes","One prolonged blast every ≤ 2 minutes","One prolonged + two short","Rapid ringing of a bell"],0],
+  ["COLREGs","A sailing vessel proceeding under sail AND engine by day must display…",["A cone, apex downward","A ball","A diamond","Two cones, apexes together"],0],
+  // Buoyage
+  ["Buoyage","In Canada (IALA Region B), returning from sea you should keep red buoys…",["To starboard","To port","Astern","On either side"],0],
+  ["Buoyage","A green can buoy will normally carry which numbers?",["Odd numbers","Even numbers","Letters only","No markings"],0],
+  ["Buoyage","A buoy showing a white light Q(9) with a yellow-black-yellow colour scheme is a…",["West cardinal — pass west of it","East cardinal — pass east of it","South cardinal","Isolated danger mark"],0],
+  ["Buoyage","A north cardinal buoy's topmark is…",["Two cones, both points up","Two cones, both points down","Two cones base-to-base","Two black spheres"],0],
+  ["Buoyage","Two black spheres as a topmark on a black buoy with red bands mark…",["An isolated danger — keep clear all round","Safe water all round","A fairway entrance","An anchorage"],0],
+  ["Buoyage","A buoy with red and white vertical stripes indicates…",["Safe water all round (fairway)","Danger directly below","A special-purpose zone","The port side of the channel"],0],
+  ["Buoyage","At a channel bifurcation, a buoy banded red over green means the PREFERRED channel is followed by…",["Keeping the buoy to starboard (upstream)","Keeping the buoy to port (upstream)","Passing north of it","Anchoring nearby"],0],
+  ["Buoyage","A yellow buoy with an ✕ topmark is a…",["Special-purpose mark — check the chart","Cardinal mark","Safe water mark","Isolated danger mark"],0],
+  // Radio
+  ["Radio","The international VHF distress, safety and calling channel is…",["Channel 16","Channel 70","Channel 13","Channel 09"],0],
+  ["Radio","VHF channel 70 is reserved for…",["Digital Selective Calling only","Bridge-to-bridge working","Weather broadcasts","Port operations"],0],
+  ["Radio","MAYDAY is only transmitted when…",["A vessel or person is in grave and imminent danger","You need a radio check","You have an important navigational warning","You are overdue at port"],0],
+  ["Radio","The urgency signal, for a serious situation NOT involving grave and imminent danger, is…",["PAN PAN","SÉCURITÉ","MAYDAY RELAY","SEELONCE"],0],
+  ["Radio","Bridge-to-bridge navigation safety traffic in Canada normally uses channel…",["13","16","06","22A"],0],
+  ["Radio","To operate a marine VHF radio in Canada, an operator must hold a…",["Restricted Operator Certificate (Maritime) — ROC-M","Ham radio licence","PCOC only","Master's certificate"],0],
+  ["Radio","\"SEELONCE MAYDAY\" transmitted on channel 16 means…",["Stop transmitting — distress traffic in progress","The distress is over","Switch to a working channel","Repeat your message"],0],
+  ["Radio","Which proword means \"I have received and will comply\"?",["WILCO","ROGER","OVER","AFFIRM"],0],
+  // Safety & General
+  ["Safety","Under the Canada Shipping Act, 2001, primary responsibility for the safety of the vessel and persons on board rests with…",["The master","The owner's agent","Transport Canada","The most senior deckhand"],0],
+  ["Safety","One fathom equals…",["6 feet","3 feet","10 feet","2 metres exactly"],0],
+  ["Safety","One nautical mile equals…",["1852 metres","1000 metres","1609 metres","2000 metres"],0],
+  ["Safety","Beaufort force 8 is described as…",["Gale, 34–40 kn","Strong breeze, 22–27 kn","Storm, 48–55 kn","Fresh breeze, 17–21 kn"],0],
+  ["Safety","If a crew member falls overboard, your FIRST action should be to…",["Shout \"man overboard\", throw flotation, and keep the person in sight","Go below for the first-aid kit","Radio the owner","Immediately stop the engine without marking the position"],0],
+  ["Safety","Rising steadily then rapidly falling barometric pressure usually warns of…",["Approaching bad weather / a depression","Continued fair weather","Fog formation only","No change"],0],
+  ["Safety","A vessel's compass bearing to an approaching ship stays constant and range is decreasing. This means…",["Risk of collision exists","No risk of collision","She will pass ahead","She is anchored"],0],
+  ["Safety","When should lifejackets or PFDs be worn on deck on a small commercial vessel?",["Whenever risk of falling overboard exists, per the vessel's safety procedures","Only in fog","Only at night","Only during drills"],0],
+];
+
+let quizState = null;
+
+function renderStudy() {
+  const cats = ["All", ...new Set(QUIZ.map(q => q[0]))];
+  let html = '<h2>Exam prep quiz</h2>';
+  html += `<div class="card" data-search="quiz exam study transport canada svop roc watchkeeping">
+    <div class="card-sub" style="margin-bottom:10px">Transport-Canada-style multiple choice. Pick a topic and go — answers shuffle every round.</div>
+    <div class="pill-row">${cats.map(c => `<button class="pill" data-cat="${c}" onclick="startQuiz('${c}')">${c}</button>`).join('')}</div>
+    <div id="quiz-area"></div>
+  </div>`;
+  html += '<h2>How the exams map</h2>';
+  html += card("SVOP", "Small Vessel Operator Proficiency — small commercial vessels up to 24 m in sheltered / near coastal 2 waters. 1-day course, written test.");
+  html += card("ROC-M", "Restricted Operator Certificate (Maritime) — legally required to use a marine VHF. Covers channels, DSC, distress procedure.");
+  html += card("Watchkeeping Mate / Master certificates", "Transport Canada certificates (TP 2293 examination system) — COLREGs, chartwork, ship stability, MED training. This quiz covers the rules-of-the-road layer.");
+  html += card("MED", "Marine Emergency Duties — mandatory safety training (STCW basic safety) for crew on commercial vessels: fire, survival craft, first aid.");
+  html += '<div class="footer-note">Question bank is for practice only and is not an official Transport Canada product.</div>';
+  el('sec-study').innerHTML = html;
+}
+
+function startQuiz(cat) {
+  document.querySelectorAll('.pill').forEach(p => p.classList.toggle('on', p.dataset.cat === cat));
+  const pool = QUIZ.filter(q => cat === 'All' || q[0] === cat);
+  const order = [...pool].sort(() => Math.random() - 0.5).slice(0, 10);
+  quizState = { order, i: 0, score: 0 };
+  showQuestion();
+}
+
+function showQuestion() {
+  const { order, i, score } = quizState;
+  const area = el('quiz-area');
+  if (i >= order.length) {
+    const pct = Math.round(score / order.length * 100);
+    area.innerHTML = `<div class="quiz-q" style="text-align:center">${pct >= 70 ? '✅' : '📚'} ${score} / ${order.length} (${pct}%)</div>
+      <div class="card-sub" style="text-align:center;margin-bottom:10px">${pct >= 70 ? 'Passing form — most TC exams need 70%+.' : 'Keep at it — aim for 70% or better.'}</div>
+      <button class="btn" onclick="startQuiz(document.querySelector('.pill.on').dataset.cat)">Try another round</button>`;
+    return;
+  }
+  const [cat, q, opts, ans] = order[i];
+  const shuffled = opts.map((o, idx) => ({ o, correct: idx === ans })).sort(() => Math.random() - 0.5);
+  area.innerHTML = `
+    <div class="quiz-meta"><span class="quiz-cat">${cat}</span><span>Q ${i + 1} of ${order.length} · Score ${score}</span></div>
+    <div class="quiz-q">${q}</div>
+    ${shuffled.map((s, idx) => `<button class="quiz-opt" data-c="${s.correct ? 1 : 0}" onclick="answer(this)">${s.o}</button>`).join('')}`;
+}
+
+function answer(btn) {
+  if (btn.parentElement.dataset.done) return;
+  btn.parentElement.dataset.done = "1";
+  const correct = btn.dataset.c === "1";
+  if (correct) quizState.score++;
+  document.querySelectorAll('.quiz-opt').forEach(b => {
+    if (b.dataset.c === "1") b.classList.add('correct');
+    else if (b === btn) b.classList.add('wrong');
+    b.disabled = true;
+  });
+  setTimeout(() => { quizState.i++; delete el('quiz-area').dataset.done; showQuestion(); }, correct ? 700 : 1600);
+}
+
+/* ============================================================
+   Navigation, theme, search
+   ============================================================ */
+const SEARCHABLE = { rules: 1, radio: 1, cip: 1, buoys: 1, tools: 1 };
+
+function go(sec) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  el('sec-' + sec).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('active', b.dataset.sec === sec));
+  el('searchbar').style.display = SEARCHABLE[sec] ? 'block' : 'none';
+  el('searchInput').value = '';
+  filterCards('');
+  window.scrollTo(0, 0);
+  localStorage.setItem('wh-sec', sec);
+}
+
+function filterCards(q) {
+  q = q.trim().toLowerCase();
+  const active = document.querySelector('.section.active');
+  if (!active) return;
+  active.querySelectorAll('.card').forEach(c => {
+    c.classList.toggle('hidden', q && !(c.dataset.search || c.textContent.toLowerCase()).includes(q));
+  });
+  active.querySelectorAll('h2').forEach(h => {
+    let sib = h.nextElementSibling, any = false;
+    while (sib && sib.tagName !== 'H2') { if (sib.classList && sib.classList.contains('card') && !sib.classList.contains('hidden')) any = true; sib = sib.nextElementSibling; }
+    h.style.display = any ? '' : 'none';
+  });
+}
+
+const THEMES = [["dusk", "🌘 Dusk"], ["day", "☀️ Day"], ["night", "🔴 Night"]];
+function cycleTheme() {
+  const cur = document.body.dataset.theme;
+  const i = (THEMES.findIndex(t => t[0] === cur) + 1) % THEMES.length;
+  applyTheme(THEMES[i][0]);
+}
+function applyTheme(name) {
+  document.body.dataset.theme = name;
+  el('themeBtn').textContent = THEMES.find(t => t[0] === name)[1];
+  localStorage.setItem('wh-theme', name);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  meta.content = getComputedStyle(document.body).getPropertyValue('--bg').trim();
+}
+
+/* ---------- boot ---------- */
+renderRules(); renderRadio(); renderCIP(); renderBuoys(); renderTools(); renderStudy();
+applyTheme(localStorage.getItem('wh-theme') || 'dusk');
+go(localStorage.getItem('wh-sec') || 'radio');
+
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
