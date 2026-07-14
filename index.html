@@ -213,6 +213,23 @@
   nav button.active { color: var(--accent); }
 
   .footer-note { text-align: center; font-size: 0.7rem; color: var(--ink-dim); margin-top: 24px; line-height: 1.6; padding: 0 10px; }
+
+  /* ---------- Home ---------- */
+  .home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+  .home-btn {
+    background: var(--card); border: 1px solid var(--card-edge); border-radius: 16px;
+    padding: 18px 10px 14px; text-align: center; cursor: pointer; color: var(--ink);
+    font-family: inherit;
+  }
+  .home-btn:active { background: var(--tap); }
+  .home-btn .ico { font-size: 2rem; display: block; margin-bottom: 6px; }
+  .home-btn b { font-size: 0.95rem; }
+  .home-btn small { display: block; color: var(--ink-dim); font-size: 0.72rem; margin-top: 3px; line-height: 1.35; }
+  .home-wide { grid-column: 1 / -1; }
+  .disclaimer {
+    background: rgba(229, 99, 111, 0.1); border: 1px solid var(--bad); border-radius: 12px;
+    padding: 10px 12px; font-size: 0.78rem; line-height: 1.55; margin-top: 14px;
+  }
 </style>
 </head>
 <body data-theme="dusk">
@@ -228,21 +245,21 @@
 </header>
 
 <main>
-  <div class="section" id="sec-rules"></div>
+  <div class="section" id="sec-home"></div>
   <div class="section" id="sec-radio"></div>
   <div class="section" id="sec-cip"></div>
   <div class="section" id="sec-buoys"></div>
   <div class="section" id="sec-tools"></div>
-  <div class="section" id="sec-study"></div>
+  <div class="section" id="sec-learn"></div>
 </main>
 
 <nav>
+  <button data-sec="home" onclick="go('home')"><span class="ico">⚓</span>Home</button>
   <button data-sec="radio" onclick="go('radio')"><span class="ico">📻</span>Radio</button>
   <button data-sec="cip" onclick="go('cip')"><span class="ico">📍</span>CIPs</button>
-  <button data-sec="buoys" onclick="go('buoys')"><span class="ico">🛟</span>Buoyage</button>
-  <button data-sec="rules" onclick="go('rules')"><span class="ico">🚢</span>Rules</button>
+  <button data-sec="buoys" onclick="go('buoys')"><span class="ico">🛟</span>Buoys</button>
   <button data-sec="tools" onclick="go('tools')"><span class="ico">🧮</span>Tools</button>
-  <button data-sec="study" onclick="go('study')"><span class="ico">🎓</span>Study</button>
+  <button data-sec="learn" onclick="go('learn')"><span class="ico">🎓</span>Learning</button>
 </nav>
 
 <script>
@@ -250,6 +267,8 @@
    WHEELHOUSE — data-driven pocket reference for Canadian mariners
    All content renders from the data objects below.
    ============================================================ */
+
+const APP_VERSION = '0.1';
 
 /* ---------- helpers ---------- */
 const el = id => document.getElementById(id);
@@ -278,7 +297,27 @@ const card = (title, sub, visual = '', note = '') => `
   </div>`;
 
 /* ============================================================
-   SECTION: RULES (COLREGs quick reference)
+   SECTION: HOME
+   ============================================================ */
+function renderHome() {
+  el('sec-home').innerHTML = `
+  <div class="home-grid">
+    <button class="home-btn home-wide" style="border-color:var(--bad)" onclick="go('radio')">
+      <span class="ico">🚨</span><b>Distress &amp; urgency scripts</b><small>MAYDAY · PAN PAN · SÉCURITÉ</small>
+    </button>
+    <button class="home-btn" onclick="go('radio')"><span class="ico">📻</span><b>Radio</b><small>VHF channels · phonetic alphabet · prowords</small></button>
+    <button class="home-btn" onclick="go('cip')"><span class="ico">📍</span><b>CIPs</b><small>Seaway &amp; Great Lakes calling-in points</small></button>
+    <button class="home-btn" onclick="go('buoys')"><span class="ico">🛟</span><b>Buoyage</b><small>IALA B laterals · cardinals · Canadian marks</small></button>
+    <button class="home-btn" onclick="go('tools')"><span class="ico">🧮</span><b>Tools</b><small>CIP passage times · SDT · unit converter</small></button>
+    <button class="home-btn" onclick="go('learn')"><span class="ico">🎓</span><b>Learning</b><small>Exam prep quiz · COLREGs reference</small></button>
+    <button class="home-btn" onclick="cycleTheme()"><span class="ico">🌘</span><b>Theme</b><small>Day · dusk · red night-vision mode</small></button>
+  </div>
+  <div class="disclaimer">⚠️ <b>Reference &amp; training aid only.</b> Abeam is not an official publication and must not be relied upon for navigation, collision avoidance or emergency procedures. Always verify against the current Seaway Handbook, RAMN, charts and Notices to Mariners, and follow your vessel's procedures.</div>
+  <div class="footer-note">Abeam v${APP_VERSION} · Sources: Seaway Handbook — Practices &amp; Procedures (Mar 2026) · RAMN 2026 v5 · TP 968 · 33 CFR 161.45</div>`;
+}
+
+/* ============================================================
+   SECTION: LEARNING — COLREGs reference (quiz further below)
    ============================================================ */
 const NAV_LIGHTS = [
   ["Power-driven vessel < 50 m", "Masthead light, sidelights, sternlight.", [["w"],["g","r"]], "Rule 23"],
@@ -328,7 +367,7 @@ const SOUND_FOG = [
   ["Pilot vessel on duty", "May add four short blasts to its fog signal", "SSSS"],
 ];
 
-function renderRules() {
+function rulesHTML() {
   let html = '<h2>Responsibility hierarchy — Rule 18</h2>';
   html += card("The pecking order (give-way priority)",
     "Not Under Command → Restricted in Ability to Manoeuvre → Constrained by Draught → Fishing → Sailing → Power-driven → Seaplane / WIG. Each vessel keeps clear of every vessel above it on the list.",
@@ -355,7 +394,7 @@ function renderRules() {
     html += card(t, (seq ? blasts(seq) + ' ' : '') + s);
 
   html += '<div class="footer-note">Quick reference only — always consult the current Collision Regulations (C.R.C., c. 1416) with Canadian modifications.</div>';
-  el('sec-rules').innerHTML = html;
+  return html;
 }
 
 /* ============================================================
@@ -380,7 +419,7 @@ function renderRadio() {
 
   html += `<div class="card" data-search="mayday distress script grave imminent danger">
     <div class="card-title">🔴 MAYDAY — grave & imminent danger</div>
-    <div class="card-sub">Ch 16 · HIGH power · Only when life or vessel is in grave and imminent danger.</div>
+    <div class="card-sub">Ch 16 · Only when life or vessel is in grave and imminent danger.</div>
     <div class="script"><b>MAYDAY, MAYDAY, MAYDAY</b>
 THIS IS <i>[vessel name ×3, call sign]</i>
 <b>MAYDAY</b> <i>[vessel name, call sign]</i>
@@ -404,10 +443,10 @@ OVER</div>
 
   html += `<div class="card" data-search="securite safety navigation warning weather">
     <div class="card-title">🟢 SÉCURITÉ — safety</div>
-    <div class="card-sub">Announce on Ch 16, pass the message on a working channel. Important navigational or meteorological warnings (debris, extinguished light, tow restricting a channel…).</div>
+    <div class="card-sub">Announce on Ch 16. Important navigational or meteorological information for other traffic (restricted manoeuvrability in a channel, debris, hazard to navigation…).</div>
     <div class="script"><b>SÉCURITÉ, SÉCURITÉ, SÉCURITÉ</b>
 ALL STATIONS ×3 · THIS IS <i>[vessel ×3, call sign]</i>
-LISTEN CHANNEL <i>[working ch]</i> FOR NAVIGATIONAL WARNING
+<i>[position and safety message]</i>
 OUT</div>
   </div>`;
 
@@ -438,7 +477,7 @@ OUT</div>
   html += card("Figures", "0 ZE-RO · 1 WUN · 2 TOO · 3 TREE · 4 FOW-ER · 5 FIFE · 6 SIX · 7 SEV-EN · 8 AIT · 9 NIN-ER · Decimal DAY-SEE-MAL");
   html += card("Common prowords", "OVER — my transmission ended, reply expected · OUT — exchange ended, no reply expected · ROGER — received & understood · WILCO — will comply · SAY AGAIN — repeat · SEELONCE MAYDAY — imposed radio silence during distress · SEELONCE FEENEE — distress traffic ended");
 
-  html += '<div class="footer-note">Distress procedure per the Radiocommunication Regulations & RIC-21. Never transmit a false distress — it is an offence.</div>';
+  html += '<div class="footer-note">For reference only — not to be relied upon. Verify procedures in the current official publications (RIC-21, RAMN).</div>';
   el('sec-radio').innerHTML = html;
 }
 
@@ -1032,7 +1071,7 @@ const QUIZ = [
 
 let quizState = null;
 
-function renderStudy() {
+function studyHTML() {
   const cats = ["All", ...new Set(QUIZ.map(q => q[0]))];
   let html = '<h2>Exam prep quiz</h2>';
   html += `<div class="card" data-search="quiz exam study transport canada svop roc watchkeeping">
@@ -1046,7 +1085,11 @@ function renderStudy() {
   html += card("Watchkeeping Mate / Master certificates", "Transport Canada certificates (TP 2293 examination system) — COLREGs, chartwork, ship stability, MED training. This quiz covers the rules-of-the-road layer.");
   html += card("MED", "Marine Emergency Duties — mandatory safety training (STCW basic safety) for crew on commercial vessels: fire, survival craft, first aid.");
   html += '<div class="footer-note">Question bank is for practice only and is not an official Transport Canada product.</div>';
-  el('sec-study').innerHTML = html;
+  return html;
+}
+
+function renderLearn() {
+  el('sec-learn').innerHTML = studyHTML() + '<h2 style="margin-top:26px">📖 COLREGs quick reference</h2>' + rulesHTML();
 }
 
 function startQuiz(cat) {
@@ -1091,9 +1134,10 @@ function answer(btn) {
 /* ============================================================
    Navigation, theme, search
    ============================================================ */
-const SEARCHABLE = { rules: 1, radio: 1, cip: 1, buoys: 1, tools: 1 };
+const SEARCHABLE = { radio: 1, cip: 1, buoys: 1, tools: 1, learn: 1 };
 
 function go(sec) {
+  if (!el('sec-' + sec)) sec = 'home';
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   el('sec-' + sec).classList.add('active');
   document.querySelectorAll('nav button').forEach(b => b.classList.toggle('active', b.dataset.sec === sec));
@@ -1133,9 +1177,9 @@ function applyTheme(name) {
 }
 
 /* ---------- boot ---------- */
-renderRules(); renderRadio(); renderCIP(); renderBuoys(); renderTools(); renderStudy();
+renderHome(); renderRadio(); renderCIP(); renderBuoys(); renderTools(); renderLearn();
 applyTheme(localStorage.getItem('wh-theme') || 'dusk');
-go(localStorage.getItem('wh-sec') || 'radio');
+go(localStorage.getItem('wh-sec') || 'home');
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   navigator.serviceWorker.register('sw.js').catch(() => {});
