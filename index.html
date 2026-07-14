@@ -268,7 +268,7 @@
    All content renders from the data objects below.
    ============================================================ */
 
-const APP_VERSION = '0.1';
+const APP_VERSION = '0.1.1';
 
 /* ---------- helpers ---------- */
 const el = id => document.getElementById(id);
@@ -824,6 +824,45 @@ const CIP_ROUTES = {
   },
 };
 
+/* Weather observation codes — per allships.com.au/weather-observation-codes */
+const WX_CODES = {
+  weather: {
+    title: "State of weather — logbook letter codes",
+    head: ["Code", "Meaning"],
+    rows: [
+      ["a", "Active"], ["b", "Blue sky (< 25% clouded)"], ["bc", "Partly cloudy (between b and c)"],
+      ["c", "Cloudy (> 75% clouded)"], ["d", "Drizzling rain"], ["f", "Fog"],
+      ["g", "Dark and gloomy"], ["h", "Hail"], ["l", "Lightning"], ["o", "Overcast"],
+      ["p", "Passing showers"], ["q", "Squally"], ["r", "Rain"], ["s", "Snow"],
+      ["t", "Thunder"], ["u", "Ugly (threatening)"], ["v", "Unusual transparency (visibility)"],
+    ],
+    note: "Letters combine to describe conditions — e.g. “bc” partly cloudy, “rq” rain squalls, “tlr” thunderstorm with rain.",
+  },
+  vis: {
+    title: "Visibility codes 0–9",
+    head: ["Code", "Description", "Range"],
+    rows: [
+      ["0", "Dense fog", "< 50 m"], ["1", "Thick fog", "50–200 m"], ["2", "Fog", "200–500 m"],
+      ["3", "Moderate fog", "500–1000 m"], ["4", "Mist or thin fog", "1–2 km"],
+      ["5", "Poor visibility", "2–4 km"], ["6", "Moderate visibility", "4–10 km"],
+      ["7", "Good visibility", "10–20 km"], ["8", "Very good visibility", "20–50 km"],
+      ["9", "Exceptional visibility", "> 50 km"],
+    ],
+    note: "Rough conversion: 1 nm ≈ 1.85 km, so code 6 spans roughly 2–5 nm and code 7 roughly 5–11 nm.",
+  },
+  sea: {
+    title: "Sea state (WMO) 0–9",
+    head: ["Code", "Description", "Wave height (crest–trough)"],
+    rows: [
+      ["0", "Calm — glassy", "0 m"], ["1", "Calm — rippled", "0–0.1 m"], ["2", "Smooth — wavelets", "0.1–0.5 m"],
+      ["3", "Slight", "0.5–1.25 m"], ["4", "Moderate", "1.25–2.5 m"], ["5", "Rough", "2.5–4 m"],
+      ["6", "Very rough", "4–6 m"], ["7", "High", "6–9 m"], ["8", "Very high", "9–14 m"],
+      ["9", "Phenomenal", "> 14 m"],
+    ],
+    note: "Height of wind waves only — swell is logged separately.",
+  },
+};
+
 const UNITS = {
   Distance: { base: "m", u: { "nautical miles": 1852, "kilometres": 1000, "statute miles": 1609.344, "metres": 1, "feet": 0.3048, "fathoms": 1.8288, "cables": 185.2 } },
   Speed:    { base: "m/s", u: { "knots": 0.514444, "km/h": 0.277778, "mph": 0.44704, "m/s": 1 } },
@@ -882,6 +921,17 @@ function renderTools() {
     ${BEAUFORT.map(([f, n, k, s]) => `<tr><td class="ch">${f}</td><td>${n}</td><td style="white-space:nowrap">${k}</td><td>${s}</td></tr>`).join('')}
   </table></div>`;
 
+  html += '<h2>Weather observation codes</h2>';
+  html += `<div class="card" data-search="weather observation codes state of weather visibility codes sea state logbook letter codes bc overcast squally drizzle fog mist thick dense rough phenomenal wave height">
+    <div class="field"><label>Code set</label><select id="wx-set" onchange="renderWx()">
+      <option value="weather">State of weather (letters)</option>
+      <option value="vis">Visibility (0–9)</option>
+      <option value="sea">Sea state (0–9)</option>
+    </select></div>
+    <div id="wx-table"></div>
+    <div class="card-note" id="wx-note"></div>
+  </div>`;
+
   html += '<h2>Handy figures</h2>';
   html += card("Distances", "1 nm = 1852 m = 1.15 statute mi · 1 cable = 0.1 nm ≈ 185 m · 1 fathom = 6 ft = 1.83 m · 1 shot of anchor chain = 15 fathoms = 27.4 m (90 ft)");
   html += card("Speed of sound & horizon", "Distance off by sound: ~1 nm per 5.5 s between flash and report. Horizon distance (nm) ≈ 2.08 × √height of eye (m).");
@@ -892,6 +942,7 @@ function renderTools() {
   el('sec-tools').innerHTML = html;
   buildUnits();
   setCipDir('up');
+  renderWx();
 }
 
 function calcSDT() {
@@ -918,6 +969,18 @@ function calcSDT() {
   } else {
     out.innerHTML = 'Enter any two of the three values.';
   }
+}
+
+/* ---------- weather observation codes ---------- */
+function renderWx() {
+  const set = WX_CODES[el('wx-set').value];
+  el('wx-table').innerHTML = `
+    <div class="card-sub" style="margin:2px 0 6px"><b>${set.title}</b></div>
+    <table>
+      <tr>${set.head.map(h => `<th>${h}</th>`).join('')}</tr>
+      ${set.rows.map(r => `<tr><td class="ch">${r[0]}</td>${r.slice(1).map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}
+    </table>`;
+  el('wx-note').textContent = set.note;
 }
 
 /* ---------- CIP passage time calculator ---------- */

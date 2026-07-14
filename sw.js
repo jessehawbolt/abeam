@@ -1,4 +1,4 @@
-const CACHE = 'abeam-v0.1';
+const CACHE = 'abeam-v0.1.1';
 const ASSETS = ['./', './index.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
